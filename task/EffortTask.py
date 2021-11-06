@@ -10,14 +10,18 @@ def runTask(id, sex, age, _thisDir):
     """
     Calculation effort task based on Vasenna et al. (2021)
     fEMG triggers to be added for BIOPAC machine
-    
-    
-    For question, contact Sean. 
+
+    @id:       subject idea
+    @sex:      subject sex
+    @age:      subject age
+    @_thisDir: location of this script, data folder,  stimuli, and instructions
+
+    For question, contact Sean.
     seandamiandevine@gmail.com
     """
     # Initialize datafile
     filename = _thisDir + os.sep + 'data' + os.sep + 'EMGEff_' + str(id)+'_'+str(dt.datetime.now()).replace(':','_')+'.csv'
-    initCSV(filename, ['id', 'age', 'sex', 'cued', 'block', 'trial', 'efflev', 'rewlev', 'calc', 'corAns', 'option1', 'option2', 'option3', 'tstart', 
+    initCSV(filename, ['id', 'age', 'sex', 'cued', 'block', 'condtrial' ,'trialinblock', 'efflev', 'rewlev', 'calc', 'corAns', 'option1', 'option2', 'option3', 'tstart',
         'ITI1Time','probTime', 'respTime', 'selectTime', 'ITI2Time', 'fbTime', 'ITI3Time', 'key_press', 'chosenAns', 'RT', 'acc', 'feedback'])
 
     # Window setup
@@ -29,14 +33,14 @@ def runTask(id, sex, age, _thisDir):
     # Set constants
     textCol      = [-1, -1, -1]                                              # font colour
     fontH        = 1                                                         # font height
-    CueDf        = pd.read_csv('stim/cued.csv')                              # equations for non-cued condition 
+    CueDf        = pd.read_csv('stim/cued.csv')                              # equations for non-cued condition
     NoCueDf      = pd.read_csv('stim/nocued.csv')                            # sequations for cued condition
     pracCalc     = pd.read_csv('stim/train.csv')                             # practice stimulus list
     nBlocksNoCue = 3                                                         # number of blocks (breaks) in non-cued condition
     nBlocksCue   = 5                                                         # number of blocks (breaks) in cued condition
     nTrialsNoCue = 2 if id=='debug' else len(NoCueDf)//nBlocksNoCue          # number of trials per block in non-cued condition
     nTrialsCue   = 2 if id=='debug' else len(CueDf)//nBlocksCue              # number of trials per block in cued condition
-    nPract       = 2 if id=='debug' else len(pracCalc)                       # number of practice trials 
+    nPract       = 2 if id=='debug' else len(pracCalc)                       # number of practice trials
     choiceKeys   = ['q', 'w', 'e']                                           # keys to make choices
     cueTime      = 2                                                         # amount of time effort cue stays up (in s. )
     ITI          = 1.5                                                       # amount of time fixation cross stays up (in s.)
@@ -44,12 +48,14 @@ def runTask(id, sex, age, _thisDir):
     respTime     = 5                                                         # amount of time response options stay up (in s.)
     fbTime       = 1                                                         # amount of time feedback stays up (in s. )
     stimDir      = 'stim/'                                                   # directory where stimuli are located
-    instDir      = 'instructions/'                                           # directory where instructions are located 
+    instDir      = 'instructions/'                                           # directory where instructions are located
+    TLXcsv       = '{}TLX.csv'.format(stimDir)
+    TLXdims      = ['mental_demand', 'effort']
 
     # initialize instructions
-    insts      = os.listdir(instDir) 
+    insts      = os.listdir(instDir)
     instPic    = visual.ImageStim(win, image="instructions/1.png")
-    
+
     # initialize trial components
     trialClock = core.Clock()
     effCue     = visual.ImageStim(win, image="{}eff1.png".format(stimDir))
@@ -58,15 +64,10 @@ def runTask(id, sex, age, _thisDir):
     opt2       = visual.TextStim(win, text="", height=3*fontH, color=textCol, pos=[0, 0])
     opt3       = visual.TextStim(win, text="", height=3*fontH, color=textCol, pos=[8, 0])
     endScreen  = visual.TextStim(win, text="", height=fontH,   color=textCol, pos=[0, 0], wrapWidth=30)
-    rating     = visual.Slider(win, ticks=[1,2,3], pos=[0,0], color='black')
+    TLXRating  = visual.RatingScale(win, low=0, high=10, markerStart=5, textColor='black', scale=None, lineColor='black', markerColor='DarkRed', labels=['Very Low', 'Very High'])
 
     #--------------------------------------Start Task-----------------------------------------
-    #win.mouseVisible=True
-    # print(rating.getRating())
-
-    # while not rating.rating:
-    #     rating.draw()
-    #     win.flip()
+    win.mouseVisible=True if id=='debug' else False
 
     # Instructions A
     instCounter = 1
@@ -99,11 +100,11 @@ def runTask(id, sex, age, _thisDir):
         core.wait(probTime)
         win.flip()
 
-        # 2. Response 
-        choiceTime = trialClock.getTime() 
+        # 2. Response
+        choiceTime = trialClock.getTime()
         corAns     = pracCalc.Correct.iloc[pt]
         options    = [corAns, pracCalc.Wrong_1.iloc[pt], pracCalc.Wrong_2.iloc[pt]]
-        shuffle(options) 
+        shuffle(options)
         opt1.text, opt2.text, opt3.text = [str(o) for o in options]
         opt1.draw()
         opt2.draw()
@@ -113,7 +114,7 @@ def runTask(id, sex, age, _thisDir):
         chosenTime = trialClock.getTime()
         if not key_press:
             response    = 'NA'
-            givenAnswer = 'NA' 
+            givenAnswer = 'NA'
             RT          = 'NA'
             acc         = 0
         else:
@@ -148,9 +149,9 @@ def runTask(id, sex, age, _thisDir):
         core.wait(ITI)
         win.flip()
 
-        # Save. 
-        out = [id, age, sex, 0, 'Practice', pt, effLev, 0, thisCalc, corAns, options[0], options[1], options[2], startTime,
-                'NA', calcTime, choiceTime, chosenTime, ITI2Time, feedbackTime, ITI3Time, response, givenAnswer, RT, 
+        # Save.
+        out = [id, age, sex, 0, 'Practice', 'NA', pt, effLev, 0, thisCalc, corAns, options[0], options[1], options[2], startTime,
+                'NA', calcTime, choiceTime, chosenTime, ITI2Time, feedbackTime, ITI3Time, response, givenAnswer, RT,
                 acc, fb]
         addOutput(filename, out)
 
@@ -167,9 +168,10 @@ def runTask(id, sex, age, _thisDir):
             instCounter += 1
             print(instCounter)
 
-    # Test trials 
+    # Test trials
     # No cue phase
-    effList = NoCueDf.sample(frac=1).reset_index(drop=True)
+    effList = NoCueDf.sample(frac = 1).reset_index(drop = True)
+    tCount  = 0 # total trial counter
     for b in range(nBlocksNoCue):
         if b > 0:
             txt.height = fontH
@@ -189,7 +191,7 @@ def runTask(id, sex, age, _thisDir):
 
             # 1. Calculation
             calcTime = trialClock.getTime()
-            nums     = effList[['num1', 'num2', 'num3', 'num4', 'num5']].loc[t,:]
+            nums     = effList[['num1', 'num2', 'num3', 'num4', 'num5']].loc[tCount,:]
             thisCalc = ''.join([str(n) for n in nums.values])
             txt.text = thisCalc
             txt.draw()
@@ -197,11 +199,11 @@ def runTask(id, sex, age, _thisDir):
             core.wait(probTime)
             win.flip()
 
-            # 2. Response 
-            choiceTime = trialClock.getTime() 
+            # 2. Response
+            choiceTime = trialClock.getTime()
             corAns     = effList.Correct.iloc[t]
-            options    = [corAns, effList.Wrong_1.iloc[t], effList.Wrong_2.iloc[t]]
-            shuffle(options) 
+            options    = [corAns, effList.Wrong_1.iloc[tCount], effList.Wrong_2.iloc[tCount]]
+            shuffle(options)
             opt1.text, opt2.text, opt3.text = [str(o) for o in options]
             opt1.draw()
             opt2.draw()
@@ -211,7 +213,7 @@ def runTask(id, sex, age, _thisDir):
             chosenTime = trialClock.getTime()
             if not key_press:
                 response    = 'NA'
-                givenAnswer = 'NA' 
+                givenAnswer = 'NA'
                 RT          = 'NA'
                 acc         = 0
             else:
@@ -252,10 +254,11 @@ def runTask(id, sex, age, _thisDir):
             win.flip()
 
             # Save output
-            out = [id, age, sex, 0, b, t, effLev, 0, thisCalc, corAns, options[0], options[1], options[2], startTime,
-                'NA', calcTime, choiceTime, chosenTime, ITI2Time, feedbackTime, ITI3Time, response, givenAnswer, RT, 
+            out = [id, age, sex, 0, b, tCount, t, effLev, 0, thisCalc, corAns, options[0], options[1], options[2], startTime,
+                'NA', calcTime, choiceTime, chosenTime, ITI2Time, feedbackTime, ITI3Time, response, givenAnswer, RT,
                 acc, fb]
             addOutput(filename, out)
+            tCount+=1
 
     # Instructions C
     while instCounter<len(insts):
@@ -272,6 +275,7 @@ def runTask(id, sex, age, _thisDir):
     # Test trials
     # Cued phase
     effList = CueDf.sample(frac=1).reset_index(drop=True)
+    tCount  = 0
     for b in range(nBlocksCue):
         if b > 0:
             txt.height = fontH
@@ -288,10 +292,10 @@ def runTask(id, sex, age, _thisDir):
             win.flip()
         for t in range(nTrialsCue):
             startTime = trialClock.getTime()
-            
+
             # 1. Display effort cue
             effCueTime   = trialClock.getTime()
-            effLev       = effList['Effort Code'].iloc[t]
+            effLev       = effList['Effort Code'].iloc[tCount]
             effCue.image = '{}eff{}.png'.format(stimDir, effLev)
             effCue.draw()
             win.flip()
@@ -308,7 +312,7 @@ def runTask(id, sex, age, _thisDir):
 
             # 3. Calculation
             calcTime = trialClock.getTime()
-            nums     = effList[['num1', 'num2', 'num3', 'num4', 'num5']].loc[t,:]
+            nums     = effList[['num1', 'num2', 'num3', 'num4', 'num5']].loc[tCount,:]
             thisCalc = ''.join([str(n) for n in nums.values])
             txt.text = thisCalc
             txt.draw()
@@ -316,11 +320,11 @@ def runTask(id, sex, age, _thisDir):
             core.wait(probTime)
             win.flip()
 
-            # 4. Response 
-            choiceTime = trialClock.getTime() 
-            corAns     = effList.Correct.iloc[t]
-            options    = [corAns, effList.Wrong_1.iloc[t], effList.Wrong_2.iloc[t]]
-            shuffle(options) 
+            # 4. Response
+            choiceTime = trialClock.getTime()
+            corAns     = effList.Correct.iloc[tCount]
+            options    = [corAns, effList.Wrong_1.iloc[tCount], effList.Wrong_2.iloc[tCount]]
+            shuffle(options)
             opt1.text, opt2.text, opt3.text = [str(o) for o in options]
             opt1.draw()
             opt2.draw()
@@ -330,7 +334,7 @@ def runTask(id, sex, age, _thisDir):
             chosenTime = trialClock.getTime()
             if not key_press:
                 response    = 'NA'
-                givenAnswer = 'NA' 
+                givenAnswer = 'NA'
                 RT          = 'NA'
                 acc         = 0
             else:
@@ -371,10 +375,42 @@ def runTask(id, sex, age, _thisDir):
             win.flip()
 
             # Save output
-            out = [id, age, sex, 1, b, t, effLev, 0, thisCalc, corAns, options[0], options[1], options[2], startTime,
-                ITI1Time, calcTime, choiceTime, chosenTime, ITI2Time, feedbackTime, ITI3Time, response, givenAnswer, RT, 
+            out = [id, age, sex, 1, b, tCount, t, effLev, 0, thisCalc, corAns, options[0], options[1], options[2], startTime,
+                ITI1Time, calcTime, choiceTime, chosenTime, ITI2Time, feedbackTime, ITI3Time, response, givenAnswer, RT,
                 acc, fb]
             addOutput(filename, out)
+            tCount+=1
+
+    # Show TLX instructions screen
+    instPic.image = '{}tlx_inst.png'.format(instDir)
+    instPic.draw()
+    win.flip()
+    event.waitKeys(keyList=['right'])
+
+    # TLX
+    effLevs     = pd.unique(CueDf['Effort Code'])
+    effCue.pos  = [0, 6]
+    effCue.size -= (3, 3)
+    txt.height  = fontH
+    TLX         = pd.read_csv(TLXcsv)
+    TLX         = TLX[TLX.dimension.isin(TLXdims)]
+    TLXresults  = {'id':id, 'EffortLevel':{}}
+    for dim in range(len(TLX)):
+        txt.text                 = TLX.itemText.iloc[dim]
+        TLXresults[TLXdims[dim]] = {}
+        for lev in effLevs:
+            TLXresults['EffortLevel'][lev] = lev
+            effCue.image                   = '{}eff{}.png'.format(stimDir, lev)
+            TLXRating.reset()
+            while TLXRating.noResponse:
+                effCue.draw()
+                txt.draw()
+                TLXRating.draw()
+                win.flip()
+            TLXresults[TLXdims[dim]][lev] = TLXRating.getRating()
+            win.flip()
+            core.wait(0.5)
+    pd.DataFrame.from_dict(TLXresults).to_csv('data/tlx/{}.csv'.format(id))
 
     # Show end screen
     endScreen.text='Thank you for completing our study!\n\nSee the experimenter for further details.'
