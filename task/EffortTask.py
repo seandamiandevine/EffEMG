@@ -49,8 +49,8 @@ def runTask(id, sex, age, _thisDir):
     fbTime       = 1                                                         # amount of time feedback stays up (in s. )
     stimDir      = 'stim/'                                                   # directory where stimuli are located
     instDir      = 'instructions/'                                           # directory where instructions are located
-    TLXcsv       = '{}TLX.csv'.format(stimDir)
-    TLXdims      = ['mental_demand', 'effort']
+    TLXcsv       = '{}TLX.csv'.format(stimDir)                               # csv file containing TLX questions and anchors
+    TLXdims      = ['mental_demand', 'effort']                               # which TLX dimensions to ask
 
     # initialize instructions
     insts      = os.listdir(instDir)
@@ -166,7 +166,6 @@ def runTask(id, sex, age, _thisDir):
             if instCounter<1: instCounter=1
         else:
             instCounter += 1
-            print(instCounter)
 
     # Test trials
     # No cue phase
