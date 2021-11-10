@@ -4,9 +4,11 @@ import os
 import datetime as dt
 import pyfiglet
 import pandas as pd
+import serial
 from fx.addOutput import addOutput, initCSV
 
-def runTask(id, sex, age, _thisDir):
+
+def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
     """
     Calculation effort task based on Vasenna et al. (2021)
     fEMG triggers to be added for BIOPAC machine
@@ -19,6 +21,26 @@ def runTask(id, sex, age, _thisDir):
     For question, contact Sean.
     seandamiandevine@gmail.com
     """
+
+    def sendTrigger(ser, i:int, delay=0.01):
+        """
+        Send a trigger of specified integer value. 
+        See this link for help: http://web.cecs.pdx.edu/~harry/compilers/ASCIIChart.pdf.
+
+        @i: integer value for a trigger
+
+        (ser has to be a global variable)
+        """
+        if behav: 
+            # don't send trigger if it is behavioural 
+            return None
+        trigger = format(i, '02x').upper().encode()
+        ser.write(trigger)
+        ser.flush()
+        core.wait(delay)
+        ser.write('00'.encode())
+        ser.flush()
+
     # Initialize datafile
     filename = _thisDir + os.sep + 'data' + os.sep + 'EMGEff_' + str(id)+'_'+str(dt.datetime.now()).replace(':','_')+'.csv'
     initCSV(filename, ['id', 'age', 'sex', 'cued', 'block', 'condtrial' ,'trialinblock', 'efflev', 'rewlev', 'calc', 'corAns', 'option1', 'option2', 'option3', 'tstart',
@@ -51,6 +73,7 @@ def runTask(id, sex, age, _thisDir):
     instDir      = 'instructions/'                                           # directory where instructions are located
     TLXcsv       = '{}TLX.csv'.format(stimDir)                               # csv file containing TLX questions and anchors
     TLXdims      = ['mental_demand', 'effort']                               # which TLX dimensions to ask
+    trigList     = pd.read_csv('EffEMG_trigs.csv')
 
     # initialize instructions
     insts      = os.listdir(instDir)
@@ -70,9 +93,11 @@ def runTask(id, sex, age, _thisDir):
     win.mouseVisible=True if id=='debug' else False
 
     # Instructions A
+    thisTrig = trigList.Code[trigList.TriggerName=='instructions'].iloc[0]
     instCounter = 1
     while instCounter<5:
         instPic.image = '{}{}.png'.format(instDir,instCounter)
+        win.callOnFlip(sendTrigger(ser, thisTrig))
         instPic.draw()
         win.flip()
         key_press  = event.waitKeys(keyList=['left', 'right'])
@@ -95,6 +120,8 @@ def runTask(id, sex, age, _thisDir):
         nums     = pracCalc[['num1', 'num2', 'num3', 'num4', 'num5']].loc[pt,:]
         thisCalc = ''.join([str(n) for n in nums.values])
         txt.text = thisCalc
+        thisTrig = trigList.Code[trigList.TriggerName=='pracProb{}'.format(effLev)].iloc[0]
+        win.callOnFlip(sendTrigger(ser, thisTrig))
         txt.draw()
         win.flip()
         core.wait(probTime)
@@ -106,11 +133,15 @@ def runTask(id, sex, age, _thisDir):
         options    = [corAns, pracCalc.Wrong_1.iloc[pt], pracCalc.Wrong_2.iloc[pt]]
         shuffle(options)
         opt1.text, opt2.text, opt3.text = [str(o) for o in options]
+        thisTrig   = trigList.Code[trigList.TriggerName=='pracAns{}'.format(effLev)].iloc[0]
+        win.callOnFlip(sendTrigger(ser, thisTrig))
         opt1.draw()
         opt2.draw()
         opt3.draw()
         win.flip()
+        thisTrig   = trigList.Code[trigList.TriggerName=='pracResp{}'.format(effLev)].iloc[0]
         key_press  = event.waitKeys(keyList=choiceKeys)
+        sendTrigger(ser, thisTrig)
         chosenTime = trialClock.getTime()
         if not key_press:
             response    = 'NA'
@@ -127,6 +158,8 @@ def runTask(id, sex, age, _thisDir):
         # 5. ITI 2
         ITI2Time = trialClock.getTime()
         txt.text = '+'
+        thisTrig = trigList.Code[trigList.TriggerName=='pracITI2'].iloc[0]
+        win.callOnFlip(sendTrigger(ser, thisTrig))
         txt.draw()
         win.flip()
         core.wait(ITI)
@@ -136,6 +169,8 @@ def runTask(id, sex, age, _thisDir):
         feedbackTime = trialClock.getTime()
         fb       = 'Correct' if acc==1 else 'Incorrect'
         txt.text = fb
+        thisTrig = trigList.Code[trigList.TriggerName=='pracFb{}'.format(effLev)].iloc[0]
+        win.callOnFlip(sendTrigger(ser, thisTrig))
         txt.draw()
         win.flip()
         core.wait(fbTime)
@@ -144,6 +179,8 @@ def runTask(id, sex, age, _thisDir):
         # 7. ITI 3
         ITI3Time = trialClock.getTime()
         txt.text = '+'
+        thisTrig = trigList.Code[trigList.TriggerName=='pracITI3'].iloc[0]
+        win.callOnFlip(sendTrigger(ser, thisTrig))
         txt.draw()
         win.flip()
         core.wait(ITI)
@@ -156,8 +193,10 @@ def runTask(id, sex, age, _thisDir):
         addOutput(filename, out)
 
     # Instructions B
+    thisTrig = trigList.Code[trigList.TriggerName=='instructions'].iloc[0]
     while instCounter<=5:
         instPic.image = '{}{}.png'.format(instDir, instCounter)
+        win.callOnFlip(sendTrigger(ser, thisTrig))
         instPic.draw()
         win.flip()
         key_press  = event.waitKeys(keyList=['left', 'right'])
@@ -173,6 +212,8 @@ def runTask(id, sex, age, _thisDir):
     tCount  = 0 # total trial counter
     for b in range(nBlocksNoCue):
         if b > 0:
+            thisTrig = trigList.Code[trigList.TriggerName=='blockScreen'].iloc[0]
+            win.callOnFlip(sendTrigger(ser, thisTrig))
             txt.height = fontH
             txt.text   = 'You can now take a small break.\n\nIf you have any questions, please notify the experimenter.\n\nWhen you are ready to continue with the experiment, press SPACE.'
             txt.draw()
@@ -190,9 +231,12 @@ def runTask(id, sex, age, _thisDir):
 
             # 1. Calculation
             calcTime = trialClock.getTime()
+            effLev   = effList['Effort Code'].iloc[tCount]
             nums     = effList[['num1', 'num2', 'num3', 'num4', 'num5']].loc[tCount,:]
             thisCalc = ''.join([str(n) for n in nums.values])
             txt.text = thisCalc
+            thisTrig = trigList.Code[trigList.TriggerName=='noCueProb{}'.format(effLev)].iloc[0]
+            win.callOnFlip(sendTrigger(ser, thisTrig))
             txt.draw()
             win.flip()
             core.wait(probTime)
@@ -204,11 +248,15 @@ def runTask(id, sex, age, _thisDir):
             options    = [corAns, effList.Wrong_1.iloc[tCount], effList.Wrong_2.iloc[tCount]]
             shuffle(options)
             opt1.text, opt2.text, opt3.text = [str(o) for o in options]
+            thisTrig = trigList.Code[trigList.TriggerName=='noCueAns{}'.format(effLev)].iloc[0]
+            win.callOnFlip(sendTrigger(ser, thisTrig))
             opt1.draw()
             opt2.draw()
             opt3.draw()
             win.flip()
+            thisTrig   = trigList.Code[trigList.TriggerName=='noCueResp{}'.format(effLev)].iloc[0]
             key_press  = event.waitKeys(keyList = choiceKeys, maxWait=respTime)
+            sendTrigger(ser, thisTrig)
             chosenTime = trialClock.getTime()
             if not key_press:
                 response    = 'NA'
@@ -225,6 +273,8 @@ def runTask(id, sex, age, _thisDir):
             # 3. ITI 2
             ITI2Time = trialClock.getTime()
             txt.text = '+'
+            thisTrig = trigList.Code[trigList.TriggerName=='noCueITI2'].iloc[0]
+            win.callOnFlip(sendTrigger(ser, thisTrig))
             txt.draw()
             win.flip()
             core.wait(ITI)
@@ -423,9 +473,20 @@ print(pyfiglet.figlet_format("EMG EFFORT STUDY"))
 # id  = input('Please enter the SUBJECT ID NUMBER: ')
 # age = input("Please enter the subject's AGE: ")
 # sex = input("Please enter the subject's SEX: ")
-id  = 'debug'
-age = 25
-sex = 'M'
+# behav = input("Is the task behavioural only? (y/n):  ")
+
+id    = 'debug'
+age   = 25
+sex   = 'M'
+behav = 'y'
+if behav not in ['y', 'n']: 
+    raise ValueError("Please enter either 'y' or 'n' for whether the task is behavioural or not.")
+if behav=='y':
+    ser = serial.Serial('COM3', 115200, timeout=0)
+    if ser.isOpen() == False: ser.open() # open the serial port only if not open yet
+    ser.write("RR".encode())
+    ser.flush()
+
 print('Good luck!')
 
-runTask(id, str(sex), str(age), os.getcwd())
+runTask(id, str(sex), str(age), behav=behav)
