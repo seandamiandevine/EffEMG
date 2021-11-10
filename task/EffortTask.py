@@ -489,7 +489,7 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
                 TLXRating.draw()
                 win.flip()
             TLXresults[TLXdims[dim]][lev] = TLXRating.getRating()
-            thisTrig = trigList.Code[trigList.TriggerName=='TLX_{}_{}'.format(dim, lev)].iloc[0]
+            thisTrig = trigList.Code[trigList.TriggerName=='TLX_{}_{}'.format(TLX.dimension.iloc[dim], lev)].iloc[0]
             sendTrigger(ser, thisTrig)
             win.flip()
             core.wait(0.5)
@@ -506,15 +506,15 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
 # Run task
 os.system('clear')
 print(pyfiglet.figlet_format("EMG EFFORT STUDY"))
-# id  = input('Please enter the SUBJECT ID NUMBER: ')
-# age = input("Please enter the subject's AGE: ")
-# sex = input("Please enter the subject's SEX: ")
-# behav = input("Is the task behavioural only? (y/n):  ")
+id  = input('Please enter the SUBJECT ID NUMBER: ')
+age = input("Please enter the subject's AGE: ")
+sex = input("Please enter the subject's SEX: ")
+behav = input("Is the task behavioural only? (y/n): ")
+# id    = 'debug'
+# age   = 25
+# sex   = 'M'
+# behav = 'y'
 
-id    = 'debug'
-age   = 25
-sex   = 'M'
-behav = 'y'
 if behav not in ['y', 'n']:
     raise ValueError("Please enter either 'y' or 'n' for whether the task is behavioural or not.")
 if behav=='n':
