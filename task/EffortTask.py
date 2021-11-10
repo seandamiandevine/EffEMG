@@ -24,22 +24,23 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
 
     def sendTrigger(ser, i:int, delay=0.01):
         """
-        Send a trigger of specified integer value. 
+        Send a trigger of specified integer value.
         See this link for help: http://web.cecs.pdx.edu/~harry/compilers/ASCIIChart.pdf.
 
         @i: integer value for a trigger
 
         (ser has to be a global variable)
         """
-        if behav: 
-            # don't send trigger if it is behavioural 
-            return None
         trigger = format(i, '02x').upper().encode()
-        ser.write(trigger)
-        ser.flush()
-        core.wait(delay)
-        ser.write('00'.encode())
-        ser.flush()
+        if behav:
+            # don't send trigger if it is behavioural
+            print(trigger)
+        else:
+            ser.write(trigger)
+            ser.flush()
+            core.wait(delay)
+            ser.write('00'.encode())
+            ser.flush()
 
     # Initialize datafile
     filename = _thisDir + os.sep + 'data' + os.sep + 'EMGEff_' + str(id)+'_'+str(dt.datetime.now()).replace(':','_')+'.csv'
@@ -97,7 +98,7 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
     instCounter = 1
     while instCounter<5:
         instPic.image = '{}{}.png'.format(instDir,instCounter)
-        win.callOnFlip(sendTrigger(ser, thisTrig))
+        win.callOnFlip(sendTrigger, ser, thisTrig)
         instPic.draw()
         win.flip()
         key_press  = event.waitKeys(keyList=['left', 'right'])
@@ -106,7 +107,6 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
             if instCounter<1: instCounter=1
         else:
             instCounter += 1
-
 
     # Practice phase
     win.flip()
@@ -121,7 +121,7 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
         thisCalc = ''.join([str(n) for n in nums.values])
         txt.text = thisCalc
         thisTrig = trigList.Code[trigList.TriggerName=='pracProb{}'.format(effLev)].iloc[0]
-        win.callOnFlip(sendTrigger(ser, thisTrig))
+        win.callOnFlip(sendTrigger, ser, thisTrig)
         txt.draw()
         win.flip()
         core.wait(probTime)
@@ -134,7 +134,7 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
         shuffle(options)
         opt1.text, opt2.text, opt3.text = [str(o) for o in options]
         thisTrig   = trigList.Code[trigList.TriggerName=='pracAns{}'.format(effLev)].iloc[0]
-        win.callOnFlip(sendTrigger(ser, thisTrig))
+        win.callOnFlip(sendTrigger, ser, thisTrig)
         opt1.draw()
         opt2.draw()
         opt3.draw()
@@ -159,7 +159,7 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
         ITI2Time = trialClock.getTime()
         txt.text = '+'
         thisTrig = trigList.Code[trigList.TriggerName=='pracITI2'].iloc[0]
-        win.callOnFlip(sendTrigger(ser, thisTrig))
+        win.callOnFlip(sendTrigger, ser, thisTrig)
         txt.draw()
         win.flip()
         core.wait(ITI)
@@ -167,10 +167,14 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
 
         # 6. Feedback
         feedbackTime = trialClock.getTime()
-        fb       = 'Correct' if acc==1 else 'Incorrect'
+        if acc==1:
+            fb       = 'Correct'
+            thisTrig = trigList.Code[trigList.TriggerName == 'pracFbCor{}'.format(effLev)].iloc[0]
+        else:
+            fb       = 'Incorrect'
+            thisTrig = trigList.Code[trigList.TriggerName == 'pracFbIncor{}'.format(effLev)].iloc[0]
         txt.text = fb
-        thisTrig = trigList.Code[trigList.TriggerName=='pracFb{}'.format(effLev)].iloc[0]
-        win.callOnFlip(sendTrigger(ser, thisTrig))
+        win.callOnFlip(sendTrigger, ser, thisTrig)
         txt.draw()
         win.flip()
         core.wait(fbTime)
@@ -180,7 +184,7 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
         ITI3Time = trialClock.getTime()
         txt.text = '+'
         thisTrig = trigList.Code[trigList.TriggerName=='pracITI3'].iloc[0]
-        win.callOnFlip(sendTrigger(ser, thisTrig))
+        win.callOnFlip(sendTrigger, ser, thisTrig)
         txt.draw()
         win.flip()
         core.wait(ITI)
@@ -196,7 +200,7 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
     thisTrig = trigList.Code[trigList.TriggerName=='instructions'].iloc[0]
     while instCounter<=5:
         instPic.image = '{}{}.png'.format(instDir, instCounter)
-        win.callOnFlip(sendTrigger(ser, thisTrig))
+        win.callOnFlip(sendTrigger, ser, thisTrig)
         instPic.draw()
         win.flip()
         key_press  = event.waitKeys(keyList=['left', 'right'])
@@ -213,7 +217,7 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
     for b in range(nBlocksNoCue):
         if b > 0:
             thisTrig = trigList.Code[trigList.TriggerName=='blockScreen'].iloc[0]
-            win.callOnFlip(sendTrigger(ser, thisTrig))
+            win.callOnFlip(sendTrigger, ser, thisTrig)
             txt.height = fontH
             txt.text   = 'You can now take a small break.\n\nIf you have any questions, please notify the experimenter.\n\nWhen you are ready to continue with the experiment, press SPACE.'
             txt.draw()
@@ -236,7 +240,7 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
             thisCalc = ''.join([str(n) for n in nums.values])
             txt.text = thisCalc
             thisTrig = trigList.Code[trigList.TriggerName=='noCueProb{}'.format(effLev)].iloc[0]
-            win.callOnFlip(sendTrigger(ser, thisTrig))
+            win.callOnFlip(sendTrigger, ser, thisTrig)
             txt.draw()
             win.flip()
             core.wait(probTime)
@@ -249,7 +253,7 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
             shuffle(options)
             opt1.text, opt2.text, opt3.text = [str(o) for o in options]
             thisTrig = trigList.Code[trigList.TriggerName=='noCueAns{}'.format(effLev)].iloc[0]
-            win.callOnFlip(sendTrigger(ser, thisTrig))
+            win.callOnFlip(sendTrigger, ser, thisTrig)
             opt1.draw()
             opt2.draw()
             opt3.draw()
@@ -274,7 +278,7 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
             ITI2Time = trialClock.getTime()
             txt.text = '+'
             thisTrig = trigList.Code[trigList.TriggerName=='noCueITI2'].iloc[0]
-            win.callOnFlip(sendTrigger(ser, thisTrig))
+            win.callOnFlip(sendTrigger, ser, thisTrig)
             txt.draw()
             win.flip()
             core.wait(ITI)
@@ -284,11 +288,15 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
             feedbackTime = trialClock.getTime()
             if response=='NA':
                 fb = 'Too Slow!'
+                thisTrig = trigList.Code[trigList.TriggerName=='noCueFbSlow'].iloc[0]
             elif acc==1:
                 fb = 'Correct'
+                thisTrig = trigList.Code[trigList.TriggerName=='noCueFbCor{}'.format(effLev)].iloc[0]
             elif acc==0:
                 fb = 'Incorrect'
+                thisTrig = trigList.Code[trigList.TriggerName=='noCueFbIncor{}'.format(effLev)].iloc[0]
             txt.text = fb
+            win.callOnFlip(sendTrigger, ser, thisTrig)
             txt.draw()
             win.flip()
             core.wait(fbTime)
@@ -297,6 +305,8 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
             # 5. ITI 3
             ITI3Time = trialClock.getTime()
             txt.text = '+'
+            thisTrig = trigList.Code[trigList.TriggerName=='noCueITI3'].iloc[0]
+            win.callOnFlip(sendTrigger, ser, thisTrig)
             txt.draw()
             win.flip()
             core.wait(ITI)
@@ -310,8 +320,10 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
             tCount+=1
 
     # Instructions C
+    thisTrig = trigList.Code[trigList.TriggerName=='instructions'].iloc[0]
     while instCounter<len(insts):
         instPic.image = '{}{}.png'.format(instDir,instCounter)
+        win.callOnFlip(sendTrigger, ser, thisTrig)
         instPic.draw()
         win.flip()
         key_press  = event.waitKeys(keyList=['left', 'right'])
@@ -329,6 +341,8 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
         if b > 0:
             txt.height = fontH
             txt.text   = 'You can now take a small break.\n\nIf you have any questions, please notify the experimenter.\n\nWhen you are ready to continue with the experiment, press SPACE.'
+            thisTrig = trigList.Code[trigList.TriggerName=='blockScreen'].iloc[0]
+            win.callOnFlip(sendTrigger, ser, thisTrig)
             txt.draw()
             win.flip()
             key_press  = event.waitKeys(keyList=['space'])
@@ -346,6 +360,8 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
             effCueTime   = trialClock.getTime()
             effLev       = effList['Effort Code'].iloc[tCount]
             effCue.image = '{}eff{}.png'.format(stimDir, effLev)
+            thisTrig     = trigList.Code[trigList.TriggerName=='cue{}'.format(effLev)].iloc[0]
+            win.callOnFlip(sendTrigger, ser, thisTrig)
             effCue.draw()
             win.flip()
             core.wait(cueTime)
@@ -354,6 +370,8 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
             # 2. ITI 1
             ITI1Time = trialClock.getTime()
             txt.text = '+'
+            thisTrig     = trigList.Code[trigList.TriggerName=='cueITI1'].iloc[0]
+            win.callOnFlip(sendTrigger, ser, thisTrig)
             txt.draw()
             win.flip()
             core.wait(ITI)
@@ -364,6 +382,8 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
             nums     = effList[['num1', 'num2', 'num3', 'num4', 'num5']].loc[tCount,:]
             thisCalc = ''.join([str(n) for n in nums.values])
             txt.text = thisCalc
+            thisTrig = trigList.Code[trigList.TriggerName=='cueProb{}'.format(effLev)].iloc[0]
+            win.callOnFlip(sendTrigger, ser, thisTrig)
             txt.draw()
             win.flip()
             core.wait(probTime)
@@ -375,6 +395,8 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
             options    = [corAns, effList.Wrong_1.iloc[tCount], effList.Wrong_2.iloc[tCount]]
             shuffle(options)
             opt1.text, opt2.text, opt3.text = [str(o) for o in options]
+            thisTrig   = trigList.Code[trigList.TriggerName=='cueAns{}'.format(effLev)].iloc[0]
+            win.callOnFlip(sendTrigger, ser, thisTrig)
             opt1.draw()
             opt2.draw()
             opt3.draw()
@@ -396,6 +418,8 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
             # 5. ITI 2
             ITI2Time = trialClock.getTime()
             txt.text = '+'
+            thisTrig = trigList.Code[trigList.TriggerName=='cueITI2'].iloc[0]
+            win.callOnFlip(sendTrigger, ser, thisTrig)
             txt.draw()
             win.flip()
             core.wait(ITI)
@@ -405,11 +429,15 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
             feedbackTime = trialClock.getTime()
             if response=='NA':
                 fb = 'Too Slow!'
+                thisTrig = trigList.Code[trigList.TriggerName=='cueFbSlow'].iloc[0]
             elif acc==1:
                 fb = 'Correct'
+                thisTrig = trigList.Code[trigList.TriggerName=='cueFbCor{}'.format(effLev)].iloc[0]
             elif acc==0:
                 fb = 'Incorrect'
+                thisTrig = trigList.Code[trigList.TriggerName=='cueFbIncor{}'.format(effLev)].iloc[0]
             txt.text = fb
+            win.callOnFlip(sendTrigger, ser, thisTrig)
             txt.draw()
             win.flip()
             core.wait(fbTime)
@@ -418,6 +446,8 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
             # 7. ITI 3
             ITI3Time = trialClock.getTime()
             txt.text = '+'
+            thisTrig = trigList.Code[trigList.TriggerName=='cueITI3'].iloc[0]
+            win.callOnFlip(sendTrigger, ser, thisTrig)
             txt.draw()
             win.flip()
             core.wait(ITI)
@@ -432,6 +462,8 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
 
     # Show TLX instructions screen
     instPic.image = '{}tlx_inst.png'.format(instDir)
+    thisTrig      = trigList.Code[trigList.TriggerName=='instructions'].iloc[0]
+    win.callOnFlip(sendTrigger, ser, thisTrig)
     instPic.draw()
     win.flip()
     event.waitKeys(keyList=['right'])
@@ -457,6 +489,8 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
                 TLXRating.draw()
                 win.flip()
             TLXresults[TLXdims[dim]][lev] = TLXRating.getRating()
+            thisTrig = trigList.Code[trigList.TriggerName=='TLX_{}_{}'.format(dim, lev)].iloc[0]
+            sendTrigger(ser, thisTrig)
             win.flip()
             core.wait(0.5)
     pd.DataFrame.from_dict(TLXresults).to_csv('data/tlx/{}.csv'.format(id))
@@ -466,6 +500,8 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
     endScreen.draw()
     win.flip()
     event.waitKeys(keyList = ['escape'])
+    thisTrig = trigList.Code[trigList.TriggerName=='taskEnd'].iloc[0]
+    sendTrigger(ser, thisTrig)
 
 # Run task
 os.system('clear')
@@ -479,13 +515,17 @@ id    = 'debug'
 age   = 25
 sex   = 'M'
 behav = 'y'
-if behav not in ['y', 'n']: 
+if behav not in ['y', 'n']:
     raise ValueError("Please enter either 'y' or 'n' for whether the task is behavioural or not.")
-if behav=='y':
+if behav=='n':
+    behav = False
     ser = serial.Serial('COM3', 115200, timeout=0)
     if ser.isOpen() == False: ser.open() # open the serial port only if not open yet
     ser.write("RR".encode())
     ser.flush()
+else:
+    behav = True
+    ser   = None
 
 print('Good luck!')
 
