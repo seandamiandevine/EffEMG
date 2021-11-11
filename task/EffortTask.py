@@ -251,7 +251,7 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
 
             # 2. Response
             choiceTime = trialClock.getTime()
-            corAns     = effList.Correct.iloc[t]
+            corAns     = effList.Correct.iloc[tCount]
             options    = [corAns, effList.Wrong_1.iloc[tCount], effList.Wrong_2.iloc[tCount]]
             shuffle(options)
             opt1.text, opt2.text, opt3.text = [str(o) for o in options]
