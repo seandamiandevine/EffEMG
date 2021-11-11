@@ -509,26 +509,22 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
 # Run task
 os.system('cls')
 print(pyfiglet.figlet_format("EMG EFFORT STUDY"))
-id    = input('Please enter the SUBJECT ID NUMBER: ')
-age   = input("Please enter the subject's AGE: ")
-sex   = input("Please enter the subject's SEX: ")
-behav = input("Is the task behavioural only? (y/n): ")
-# id    = 'debug'
-# age   = 25
-# sex   = 'M'
-# behav = 'y'
+id     = input('Please enter the SUBJECT ID NUMBER: ')
+age    = input("Please enter the subject's AGE: ")
+sex    = input("Please enter the subject's SEX: ")
+trigs_ = input("Send triggers? (y/n): ")
 
-if behav not in ['y', 'n']:
-    raise ValueError("Please enter either 'y' or 'n' for whether the task is behavioural or not.")
-if behav=='n':
+if trigs_=='y':
     behav = False
     ser = serial.Serial('COM3', 115200, timeout=0)
     if ser.isOpen() == False: ser.open() # open the serial port only if not open yet
     ser.write("RR".encode())
     ser.flush()
-else:
+elif trigs_=='n':
     behav = True
     ser   = None
+else:
+    raise ValueError('Whether or not to send triggers must be "y" or "n"')
 
 print('Good luck!')
 
