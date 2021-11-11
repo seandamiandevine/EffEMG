@@ -93,6 +93,9 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
     #--------------------------------------Start Task-----------------------------------------
     win.mouseVisible=True if id=='debug' else False
 
+    thisTrig = trigList.Code[trigList.TriggerName=='taskStart'].iloc[0]
+    sendTrigger(ser, thisTrig)
+
     # Instructions A
     thisTrig = trigList.Code[trigList.TriggerName=='instructions'].iloc[0]
     instCounter = 1
@@ -504,11 +507,11 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
     sendTrigger(ser, thisTrig)
 
 # Run task
-os.system('clear')
+os.system('cls')
 print(pyfiglet.figlet_format("EMG EFFORT STUDY"))
-id  = input('Please enter the SUBJECT ID NUMBER: ')
-age = input("Please enter the subject's AGE: ")
-sex = input("Please enter the subject's SEX: ")
+id    = input('Please enter the SUBJECT ID NUMBER: ')
+age   = input("Please enter the subject's AGE: ")
+sex   = input("Please enter the subject's SEX: ")
 behav = input("Is the task behavioural only? (y/n): ")
 # id    = 'debug'
 # age   = 25

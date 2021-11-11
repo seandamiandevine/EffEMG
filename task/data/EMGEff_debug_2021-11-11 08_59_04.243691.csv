@@ -1,0 +1,2 @@
+id,age,sex,cued,block,condtrial,trialinblock,efflev,rewlev,calc,corAns,option1,option2,option3,tstart,ITI1Time,probTime,respTime,selectTime,ITI2Time,fbTime,ITI3Time,key_press,chosenAns,RT,acc,feedback
+debug,25,M,0,Practice,NA,0,1,0,4 + 1 + 9 + 1 + 1,16,15,16,14,15.20186719999765,NA,15.201869399985299,20.473071599990362,22.64130039999145,22.64130620000651,24.175476900010835,25.209486799984006,w,16,2.1682288000010885,1,Correct
