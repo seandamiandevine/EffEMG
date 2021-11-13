@@ -56,8 +56,8 @@ def runTask(id, sex, age, _thisDir=os.getcwd(), behav=False):
     # Set constants
     textCol      = [-1, -1, -1]                                              # font colour
     fontH        = 1                                                         # font height
-    CueDf        = pd.read_csv('stim/cued.csv')                              # equations for non-cued condition
-    NoCueDf      = pd.read_csv('stim/nocued.csv')                            # sequations for cued condition
+    CueDf        = pd.read_csv('stim/cued.csv')                              # equations for cued condition
+    NoCueDf      = pd.read_csv('stim/nocue.csv')                             # sequations for non-cued condition
     pracCalc     = pd.read_csv('stim/train.csv')                             # practice stimulus list
     nBlocksNoCue = 3                                                         # number of blocks (breaks) in non-cued condition
     nBlocksCue   = 5                                                         # number of blocks (breaks) in cued condition
