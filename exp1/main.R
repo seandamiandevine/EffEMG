@@ -4,11 +4,11 @@ se  = function(x) sd(x,na.rm=T)/sqrt(length(x))
 
 # Load data ---------------------------------------------------------------
 
-files = list.files('data/', pattern = ".csv")
-dat   = do.call(rbind, lapply(paste0('data/', files), read.csv, header = T, stringsAsFactors = F))
+files = list.files('data/processed/', pattern = ".csv")
+dat   = do.call(rbind, lapply(paste0('data/processed/', files), read.csv, header = T, stringsAsFactors = F))
 dat   = dat[dat$block!='Practice', ]
 dat$trial    = c(sapply(unique(dat$id), function(x) 1:nrow(dat[dat$id==x,])))
-dat$cued_c   = ifelse(dat$cued==1, 1, -1)
+dat$cued_c   = ifelse(dat$cued==1, 0.5, -0.5)
 dat$efflev_c = dat$efflev - mean(unique(dat$efflev))
 
 # Descriptives ------------------------------------------------------------
@@ -17,17 +17,21 @@ N     = length(unique(dat$id))
 pFem  = mean(sapply(unique(dat$id), function(x) grepl('f', tolower(dat[dat$id==x, 'sex'][1]))))
 mAge  = mean(unique(dat$age))
 sdAge = sd(unique(dat$age))
+mtime = mean(tapply(dat$ITI3Time, dat$id, max)/60)
 
 capture.output(list(N=N, pFem=pFem, mAge=mAge, sdAge=sdAge), file='out/demo.txt')
 
 # Sanity checks -----------------------------------------------------------
 
 # Accuracy hist
-macc = tapply(dat$acc, dat$id, mean, na.rm=T)
-hist(macc, xlim=c(0,1), xlab='Mean Accuracy', main='')
-abline(v=.33,lty=2)
-legend('topleft',bty='n',lty=2,legend='Chance')
+png('plots/global_acc.png', width=4, height=4, units = 'in', res=300)
+par(mar=c(5.1, 5.1, 4.1, 2.1), bg=NA)
 
+macc = tapply(dat$acc, dat$id, mean, na.rm=T)
+hist(macc, xlim=c(0,1), xlab='Mean Accuracy', main='', cex.axis=1.5, cex.lab=1.5)
+abline(v=.33,lty=2)
+
+dev.off()
 
 # Performance and effort level --------------------------------------------
 
@@ -53,10 +57,10 @@ legend('topright', bty='n', legend='A', cex=2)
 dev.off()
 
 RTMLM0 = lmer(RT~1 + (1|id), data=bcor)
-RTMLM1 = lmer(RT~efflev + (1|id), data=bcor)
-RTMLM2 = lmer(RT~efflev + cued_c + (1|id), data=bcor)
-RTMLM3 = lmer(RT~efflev + cued_c + (efflev|id), data=bcor)
-RTMLM4 = lmer(RT~efflev * cued_c + (efflev|id), data=bcor)
+RTMLM1 = lmer(RT~efflev_c + (1|id), data=bcor)
+RTMLM2 = lmer(RT~efflev_c + cued_c + (1|id), data=bcor)
+RTMLM3 = lmer(RT~efflev_c + cued_c + (efflev|id), data=bcor)
+RTMLM4 = lmer(RT~efflev_c * cued_c + (efflev|id), data=bcor)
 
 comp = anova(RTMLM0, RTMLM1, RTMLM2, RTMLM3, RTMLM4)
 sum  = summary(RTMLM4)
@@ -81,10 +85,10 @@ legend('topright', bty='n', legend='B', cex=2)
 dev.off()
 
 accMLM0 = glmer(acc~1 + (1|id), data=dat, family='binomial')
-accMLM1 = glmer(acc~efflev + (1|id), data=dat, family='binomial')
-accMLM2 = glmer(acc~efflev+cued_c + (1|id), data=dat, family='binomial')
-accMLM3 = glmer(acc~efflev*cued_c + (1|id), data=dat, family='binomial')
-accMLM4 = glmer(acc~efflev+cued_c + (efflev_c|id), data=dat, family='binomial') # singular
+accMLM1 = glmer(acc~efflev_c + (1|id), data=dat, family='binomial')
+accMLM2 = glmer(acc~efflev_c+cued_c + (1|id), data=dat, family='binomial')
+accMLM3 = glmer(acc~efflev_c*cued_c + (1|id), data=dat, family='binomial')
+accMLM4 = glmer(acc~efflev_c+cued_c + (efflev_c|id), data=dat, family='binomial') # singular
 
 comp = anova(accMLM0, accMLM1, accMLM2, accMLM3, accMLM4)
 sum  = summary(accMLM3)
@@ -101,9 +105,9 @@ dat$probcor_z = c(sapply(unique(dat$id), function(x) scale(dat$probcor[dat$id==x
 
 mSig  = tapply(dat$probcor_z, list(dat$cued,dat$efflev), mean, na.rm=T)
 seSig = tapply(dat$probcor_z,  list(dat$cued,dat$efflev), se)
-yrange = range(pretty(c(mSig+seSig+.1, mSig-seSig)))
+yrange = range(pretty(c(mSig+seSig, mSig-seSig)))
 
-plot(mSig[1,], type = 'b', ylim=yrange,xaxt='n',xlab='Effort Level', ylab='Corrugator (Z-Score)', main='During Problem', 
+plot(mSig[1,], type = 'b', ylim=yrange,xaxt='n',xlab='Effort Level', ylab='Z', main='During Problem', 
      cex.axis=1.5, cex.lab=1.5, cex.main=2)
 lines(mSig[2,],type='b',lty=2)
 axis(1,at=1:4,labels=1:4, cex.axis=1.5)
@@ -113,15 +117,18 @@ arrows(1:4,mSig[2,]-seSig[2,],1:4,mSig[2,]+seSig[2,],length=0)
 legend('topright', bty='n', legend='C', cex=2)
 dev.off()
 
+dat$efflev_c_2 = dat$efflev_c^2
 probcor_lm = lm(probcor_z ~ efflev_c * cued_c, data=dat)
 probcor_m0 = lmer(probcor_z ~ 1 + (1|id),data=dat)
-probcor_m1 = lmer(probcor_z ~ efflev + (1|id),data=dat)
+probcor_m1 = lmer(probcor_z ~ efflev_c + (1|id),data=dat)
 probcor_m2 = lmer(probcor_z ~ efflev_c + cued_c + (1|id),data=dat)
 probcor_m3 = lmer(probcor_z ~ efflev_c * cued_c + (1|id),data=dat)
 
+probcor_m1q = lmer(probcor_z ~ efflev_c + efflev_c_2 + (1|id),data=dat)
+
 probcoraov = anova(probcor_m0, probcor_m1, probcor_m2, probcor_m3)
-probcorsum = summary(probcor_m1)
-sjPlot::tab_model(probcor_m3, file = 'out/probcorMLM.html')
+probcorsum = summary(probcor_m2)
+sjPlot::tab_model(probcor_m2, file = 'out/probcorMLM.html')
 
 # Cue
 png('plots/cuecor.png', width=4, height=4, units = 'in', res=300)
@@ -133,7 +140,7 @@ mSig  = tapply(dat$cuecor_z, dat$efflev, mean, na.rm=T)
 seSig = tapply(dat$cuecor_z, dat$efflev, se)
 yrange = range(pretty(c(mSig+seSig, mSig-seSig)))
 
-plot(mSig, type = 'b', ylim=yrange,xaxt='n',xlab='Effort Level', ylab='Corrugator (Z-Scored)', main='During Cue', 
+plot(mSig, type = 'b', ylim=yrange,xaxt='n',xlab='Effort Level', ylab='Z', main='During Cue', 
     cex.lab=1.5, cex.axis=1.5, cex.lab=1.5, cex.main=2)
 axis(1,at=1:4,labels=1:4, cex.axis=1.5)
 arrows(1:4,mSig-seSig,1:4,mSig+seSig,length=0)
@@ -147,7 +154,7 @@ cuecor_m2 = lmer(cuecor_z ~ efflev_c + (efflev_c|id), data=dat)
 
 cuecoraov = anova(cuecor_m0, cuecor_m1, cuecor_m2)
 cuecorsum = summary(cuecor_m1)
-sjPlot::tab_model(cuecor_m2, file = 'out/cuecorMLM.html')
+sjPlot::tab_model(cuecor_m1, file = 'out/cuecorMLM.html')
 
 
 # Feedback
@@ -212,7 +219,7 @@ mSig  = tapply(dat$probzyg_z, list(dat$cued,dat$efflev), mean, na.rm=T)
 seSig = tapply(dat$probzyg_z,  list(dat$cued,dat$efflev), se)
 yrange = range(pretty(c(mSig+seSig+.1, mSig-seSig)))
 
-plot(mSig[1,], type = 'b', ylim=yrange,xaxt='n',xlab='Effort Level', ylab='Zygomaticus (Z-Scored)', main='During Problem', 
+plot(mSig[1,], type = 'b', ylim=yrange,xaxt='n',xlab='Effort Level', ylab='Z', main='During Problem', 
      cex.axis=1.5, cex.lab=1.5, cex.main=2)
 lines(mSig[2,],type='b',lty=2)
 axis(1,at=1:4,labels=1:4, cex.axis=1.5)
@@ -243,7 +250,7 @@ mSig  = tapply(dat$cuezyg_z, dat$efflev, mean, na.rm=T)
 seSig = tapply(dat$cuezyg_z, dat$efflev, se)
 yrange = range(pretty(c(mSig+seSig, mSig-seSig)))
 
-plot(mSig, type = 'b', ylim=yrange,xaxt='n',xlab='Effort Level', ylab='Zygomaticus (Z-Scored)', main='During Cue', 
+plot(mSig, type = 'b', ylim=yrange,xaxt='n',xlab='Effort Level', ylab='Z', main='During Cue', 
      cex.axis=1.5, cex.lab=1.5, cex.main=2)
 axis(1,at=1:4,labels=1:4, cex.axis=1.5)
 arrows(1:4,mSig-seSig,1:4,mSig+seSig,length=0)
@@ -316,12 +323,13 @@ png('plots/probscr.png', width=4, height=4, units = 'in', res=300)
 par(mar=c(5.1, 5.1, 4.1, 2.1), bg=NA)
 
 dat$probscr_z = c(sapply(unique(dat$id), function(x) scale(dat$probscr[dat$id==x]) ))
+dat$probscr_z[abs(dat$probscr_z) > 3] = NA
 
 mSig  = tapply(dat$probscr_z, list(dat$cued,dat$efflev), mean, na.rm=T)
 seSig = tapply(dat$probscr_z,  list(dat$cued,dat$efflev), se)
 yrange = range(pretty(c(mSig+seSig, mSig-seSig)))
 
-plot(mSig[1,], type = 'b', ylim=yrange,xaxt='n',xlab='Effort Level', ylab='SCR (Z-Scored)', main='During Problem', 
+plot(mSig[1,], type = 'b', ylim=yrange,xaxt='n',xlab='Effort Level', ylab='Z', main='During Problem', 
      cex.axis=1.5, cex.lab=1.5, cex.main=2)
 lines(mSig[2,],type='b',lty=2)
 axis(1,at=1:4,labels=1:4,  cex.axis=1.5)
@@ -346,12 +354,13 @@ png('plots/cuecr.png', width=4, height=4, units = 'in', res=300)
 par(mar=c(5.1, 5.1, 4.1, 2.1), bg=NA)
 
 dat$cuescr_z = c(sapply(unique(dat$id), function(x) scale(dat$cuescr[dat$id==x]) ))
+dat$cuescr_z[abs(dat$cuescr_z) > 3] = NA
 
 mSig  = tapply(dat$cuescr_z, dat$efflev, mean, na.rm=T)
 seSig = tapply(dat$cuescr_z, dat$efflev, se)
 yrange = range(pretty(c(mSig+seSig, mSig-seSig)))
 
-plot(mSig, type = 'b', ylim=yrange,xaxt='n',xlab='Effort Level', ylab='SCR (Z-Scored)', main='During Cue', 
+plot(mSig, type = 'b', ylim=yrange,xaxt='n',xlab='Effort Level', ylab='Z', main='During Cue', 
      cex.axis=1.5, cex.lab=1.5, cex.main=2)
 axis(1,at=1:4,labels=1:4,  cex.axis=1.5)
 arrows(1:4,mSig-seSig,1:4,mSig+seSig,length=0)
@@ -365,7 +374,7 @@ cuescr_m2 = lmer(cuescr_z ~ efflev_c + (efflev|id), data=dat)
 
 cuescraov = anova(cuescr_m0, cuescr_m1, cuescr_m2)
 cuescrsum = summary(cuescr_m1)
-sjPlot::tab_model(cuescr_m2, file = 'out/cuescrMLM.html')
+sjPlot::tab_model(cuescr_m1, file = 'out/cuescrMLM.html')
 
 # Feedback 
 dat$fbscr_z = c(sapply(unique(dat$id), function(x) scale(dat$fbscr[dat$id==x]) ))

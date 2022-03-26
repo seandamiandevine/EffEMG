@@ -2,10 +2,10 @@ $aov
 Data: bcor
 Models:
 RTMLM0: RT ~ 1 + (1 | id)
-RTMLM1: RT ~ efflev + (1 | id)
-RTMLM2: RT ~ efflev + cued_c + (1 | id)
-RTMLM3: RT ~ efflev + cued_c + (efflev | id)
-RTMLM4: RT ~ efflev * cued_c + (efflev | id)
+RTMLM1: RT ~ efflev_c + (1 | id)
+RTMLM2: RT ~ efflev_c + cued_c + (1 | id)
+RTMLM3: RT ~ efflev_c + cued_c + (efflev | id)
+RTMLM4: RT ~ efflev_c * cued_c + (efflev | id)
        npar   AIC   BIC  logLik deviance    Chisq Df Pr(>Chisq)    
 RTMLM0    3 17565 17586 -8779.6    17559                           
 RTMLM1    4 16941 16969 -8466.7    16933 625.7758  1  < 2.2e-16 ***
@@ -17,10 +17,10 @@ Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’
 
 $summary
 Linear mixed model fit by REML ['lmerMod']
-Formula: RT ~ efflev * cued_c + (efflev | id)
+Formula: RT ~ efflev_c * cued_c + (efflev | id)
    Data: bcor
 
-REML criterion at convergence: 16701.8
+REML criterion at convergence: 16699.1
 
 Scaled residuals: 
     Min      1Q  Median      3Q     Max 
@@ -34,15 +34,15 @@ Random effects:
 Number of obs: 6706, groups:  id, 44
 
 Fixed effects:
-              Estimate Std. Error t value
-(Intercept)    0.72777    0.04352  16.722
-efflev         0.27049    0.02469  10.956
-cued_c        -0.02931    0.02771  -1.058
-efflev:cued_c -0.02620    0.01072  -2.444
+                Estimate Std. Error t value
+(Intercept)      1.40399    0.07044  19.932
+efflev_c         0.27049    0.02469  10.956
+cued_c          -0.18964    0.02392  -7.929
+efflev_c:cued_c -0.05240    0.02144  -2.444
 
 Correlation of Fixed Effects:
-            (Intr) efflev cued_c
-efflev      -0.138              
-cued_c      -0.327  0.205       
-efflev:cd_c  0.300 -0.231 -0.904
+            (Intr) efflv_ cued_c
+efflev_c     0.791              
+cued_c      -0.089 -0.042       
+efflv_c:cd_ -0.017 -0.231  0.146
 

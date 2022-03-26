@@ -66,7 +66,7 @@ $`Mod comparison (prob)`
 Data: dat
 Models:
 probcor_m0: probcor_z ~ 1 + (1 | id)
-probcor_m1: probcor_z ~ efflev + (1 | id)
+probcor_m1: probcor_z ~ efflev_c + (1 | id)
 probcor_m2: probcor_z ~ efflev_c + cued_c + (1 | id)
 probcor_m3: probcor_z ~ efflev_c * cued_c + (1 | id)
            npar   AIC   BIC logLik deviance   Chisq Df Pr(>Chisq)    
@@ -79,29 +79,31 @@ Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’
 
 $`Winning model (prob)`
 Linear mixed model fit by REML ['lmerMod']
-Formula: probcor_z ~ efflev + (1 | id)
+Formula: probcor_z ~ efflev_c + cued_c + (1 | id)
    Data: dat
 
-REML criterion at convergence: 23357.5
+REML criterion at convergence: 23363
 
 Scaled residuals: 
      Min       1Q   Median       3Q      Max 
--12.0195  -0.3929   0.0533   0.4566  12.1696 
+-12.0187  -0.3930   0.0533   0.4564  12.1690 
 
 Random effects:
  Groups   Name        Variance  Std.Dev. 
- id       (Intercept) 5.922e-34 2.433e-17
- Residual             9.932e-01 9.966e-01
+ id       (Intercept) 5.923e-34 2.434e-17
+ Residual             9.933e-01 9.967e-01
 Number of obs: 8246, groups:  id, 43
 
 Fixed effects:
-             Estimate Std. Error t value
-(Intercept) -0.095392   0.026887  -3.548
-efflev       0.038157   0.009818   3.886
+              Estimate Std. Error t value
+(Intercept)  7.745e-05  1.267e-02   0.006
+efflev_c     3.816e-02  9.819e-03   3.886
+cued_c      -3.100e-04  2.534e-02  -0.012
 
 Correlation of Fixed Effects:
-       (Intr)
-efflev -0.913
+         (Intr) efflv_
+efflev_c  0.000       
+cued_c   -0.500  0.000
 optimizer (nloptwrap) convergence code: 0 (OK)
 boundary (singular) fit: see ?isSingular
 
@@ -119,8 +121,8 @@ Coefficients:
                   Estimate Std. Error t value Pr(>|t|)    
 (Intercept)      0.0000776  0.0126711   0.006 0.995114    
 efflev_c         0.0385334  0.0113327   3.400 0.000677 ***
-cued_c          -0.0001551  0.0126711  -0.012 0.990232    
-efflev_c:cued_c -0.0007541  0.0113327  -0.067 0.946946    
+cued_c          -0.0003103  0.0253422  -0.012 0.990232    
+efflev_c:cued_c -0.0015083  0.0226653  -0.067 0.946946    
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
@@ -139,32 +141,32 @@ fbscr_m2: fbscr_z ~ acc_c + cued_c + (1 | id)
 fbscr_m3: fbscr_z ~ acc_c * cued_c + (1 | id)
          npar   AIC   BIC logLik deviance  Chisq Df Pr(>Chisq)
 fbscr_m0    3 23406 23427 -11700    23400                     
-fbscr_m1    4 23407 23436 -11700    23399 0.1412  1     0.7071
-fbscr_m2    5 23409 23444 -11700    23399 0.1663  1     0.6835
-fbscr_m3    6 23410 23452 -11699    23398 0.9630  1     0.3264
+fbscr_m1    4 23407 23436 -11700    23399 0.1643  1     0.6852
+fbscr_m2    5 23409 23444 -11700    23399 0.0310  1     0.8602
+fbscr_m3    6 23411 23453 -11700    23399 0.4893  1     0.4842
 
 $`Winning model (fb)`
 Linear mixed model fit by REML ['lmerMod']
 Formula: fbscr_z ~ acc_c + cued_c + (1 | id)
    Data: dat
 
-REML criterion at convergence: 23420.1
+REML criterion at convergence: 23418.8
 
 Scaled residuals: 
     Min      1Q  Median      3Q     Max 
--5.1047 -0.5686  0.0598  0.6485  4.2506 
+-5.0473 -0.5761  0.0605  0.6511  4.2482 
 
 Random effects:
  Groups   Name        Variance  Std.Dev. 
- id       (Intercept) 2.441e-34 1.562e-17
+ id       (Intercept) 2.003e-34 1.415e-17
  Residual             9.950e-01 9.975e-01
 Number of obs: 8261, groups:  id, 44
 
 Fixed effects:
              Estimate Std. Error t value
-(Intercept)  0.005548   0.014990   0.370
-acc_c       -0.004908   0.013758  -0.357
-cued_c      -0.005175   0.012694  -0.408
+(Intercept)  0.004407   0.014990   0.294
+acc_c       -0.005460   0.013758  -0.397
+cued_c      -0.004469   0.025389  -0.176
 
 Correlation of Fixed Effects:
        (Intr) acc_c 
@@ -181,18 +183,18 @@ lm(formula = fbscr_z ~ acc_c * cued_c, data = dat)
 
 Residuals:
     Min      1Q  Median      3Q     Max 
--5.0951 -0.5646  0.0616  0.6480  4.2536 
+-5.0369 -0.5738  0.0605  0.6487  4.2473 
 
 Coefficients:
               Estimate Std. Error t value Pr(>|t|)
-(Intercept)   0.008799   0.015352   0.573    0.567
-acc_c        -0.011591   0.015352  -0.755    0.450
-cued_c       -0.013646   0.015352  -0.889    0.374
-acc_c:cued_c  0.015062   0.015352   0.981    0.327
+(Intercept)   0.006724   0.015353   0.438    0.661
+acc_c        -0.010224   0.015353  -0.666    0.505
+cued_c       -0.016546   0.030705  -0.539    0.590
+acc_c:cued_c  0.021474   0.030705   0.699    0.484
 
 Residual standard error: 0.9975 on 8257 degrees of freedom
   (187 observations deleted due to missingness)
-Multiple R-squared:  0.0001538,	Adjusted R-squared:  -0.0002095 
-F-statistic: 0.4233 on 3 and 8257 DF,  p-value: 0.7363
+Multiple R-squared:  8.287e-05,	Adjusted R-squared:  -0.0002804 
+F-statistic: 0.2281 on 3 and 8257 DF,  p-value: 0.8769
 
 
