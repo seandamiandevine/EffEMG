@@ -4,8 +4,8 @@ se  = function(x) sd(x,na.rm=T)/sqrt(length(x))
 
 # Load data ---------------------------------------------------------------
 
-files = list.files('data/processed/', pattern = ".csv")
-dat   = do.call(rbind, lapply(paste0('data/processed/', files), read.csv, header = T, stringsAsFactors = F))
+files = list.files('data/', pattern = ".csv")
+dat   = do.call(rbind, lapply(paste0('data/', files), read.csv, header = T, stringsAsFactors = F))
 dat   = dat[dat$block!='Practice', ]
 dat$trial    = c(sapply(unique(dat$id), function(x) 1:nrow(dat[dat$id==x,])))
 dat$cued_c   = ifelse(dat$cued==1, 0.5, -0.5)
